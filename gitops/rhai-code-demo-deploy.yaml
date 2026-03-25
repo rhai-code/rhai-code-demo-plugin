@@ -1,0 +1,119 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: rhai-code-demo-plugin
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: rhai-code-demo-plugin
+      app.kubernetes.io/component: rhai-code-demo-plugin
+      app.kubernetes.io/instance: rhai-code-demo-plugin
+      app.kubernetes.io/part-of: rhai-code-demo-plugin
+      app.openshift.io/runtime-namespace: rhai-code-demo-plugin
+    name: rhai-code-demo-plugin
+    namespace: rhai-code-demo-plugin
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: rhai-code-demo-plugin
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: rhai-code-demo-plugin
+      spec:
+        containers:
+        - image: quay.io/eformat/rhai-code-demo-plugin:latest
+          imagePullPolicy: Always
+          name: rhai-code-demo-plugin
+          ports:
+          - containerPort: 9443
+            protocol: TCP
+          volumeMounts:
+          - mountPath: /var/serving-cert
+            name: plugin-serving-cert
+            readOnly: true
+          - mountPath: /etc/nginx/nginx.conf
+            name: nginx-conf
+            readOnly: true
+            subPath: nginx.conf
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        volumes:
+        - name: plugin-serving-cert
+          secret:
+            defaultMode: 420
+            secretName: plugin-serving-cert
+        - configMap:
+            defaultMode: 420
+            name: nginx-conf
+          name: nginx-conf
+- apiVersion: v1
+  data:
+    nginx.conf: |
+      error_log /dev/stdout info;
+      events {}
+      http {
+        access_log         /dev/stdout;
+        include            /etc/nginx/mime.types;
+        default_type       application/octet-stream;
+        keepalive_timeout  65;
+        server {
+          listen              9443 ssl;
+          ssl_certificate     /var/serving-cert/tls.crt;
+          ssl_certificate_key /var/serving-cert/tls.key;
+          root                /usr/share/nginx/html;
+        }
+      }
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: rhai-code-demo-plugin
+      app.kubernetes.io/part-of: rhai-code-demo-plugin
+    name: nginx-conf
+    namespace: rhai-code-demo-plugin
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.openshift.io/serving-cert-secret-name: plugin-serving-cert
+    labels:
+      app: rhai-code-demo-plugin
+      app.kubernetes.io/component: rhai-code-demo-plugin
+      app.kubernetes.io/instance: rhai-code-demo-plugin
+      app.kubernetes.io/part-of: rhai-code-demo-plugin
+    name: rhai-code-demo-plugin
+    namespace: rhai-code-demo-plugin
+  spec:
+    ports:
+    - name: 9443-tcp
+      port: 9443
+      protocol: TCP
+      targetPort: 9443
+    selector:
+      app: rhai-code-demo-plugin
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: console.openshift.io/v1
+  kind: ConsolePlugin
+  metadata:
+    name: rhai-code-demo-plugin
+  spec:
+    displayName: Console Plugin Template
+    backend:
+      type: Service
+      service:
+        basePath: /
+        name: rhai-code-demo-plugin
+        namespace: rhai-code-demo-plugin
+        port: 9443
+kind: List
+metadata: {}

@@ -1,0 +1,20 @@
+[
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/rhai-code-demo",
+      "component": { "$codeRef": "RhaiCodeDemoPage" }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "rhai-code-demo",
+      "name": "RHAI Code Demos",
+      "href": "/rhai-code-demo",
+      "perspective": "admin",
+      "section": "home"
+    }
+  }
+]
