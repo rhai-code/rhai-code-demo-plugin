@@ -1,34 +1,30 @@
-# RHAI Code Demos Web Console Plugin
+# RHAI Code Demos Console Plugin
 
-On a 4.10+ OpenShift cluster, deploy this dynamic console plugin:
+An OpenShift dynamic console plugin that embeds the RHAI Code Demos site in the console.
 
-```bash
-oc process -f template.yaml \
-  -p PLUGIN_NAME=rhai-code-demo-plugin \
-  -p NAMESPACE=rhai-code-demo-plugin \
-  -p IMAGE=quay.io/eformat/rhai-code-demo-plugin:latest \
-  | oc create -f -
-```
+Dependencies: **rhai-nav-plugin** must be deployed first — it defines the "RHAI" top-level navigation section that this plugin's nav item references.section).
 
-```bash
-oc patch consoles.operator.openshift.io cluster \
-  --patch '{ "spec": { "plugins": ["rhai-code-demo-plugin"] } }' --type=merge
-```
+See [CLAUDE.md](CLAUDE.md) for more details.
 
-OR if using a GitOps approach and kustomize:
+## Deploy
+
+Install using a GitOps approach and kustomize:
 
 ```bash
+# Deploy the nav plugin first (if not already deployed)
+oc apply -k ../rhai-nav-plugin/gitops
+
+# Deploy this plugin
 oc apply -k ./gitops
 ```
+
+The plugin auto-enables itself in the console via an init container.
 
 ![ocp-console-plugin-demo.png](ocp-console-plugin-demo.png)
 
 ## Build image locally
 
-You can build it locally using:
-
 ```bash
 yarn install
-podman build -t quay.io/eformat/rhai-code-demo-plugin:latest .
-podman push quay.io/eformat/rhai-code-demo-plugin:latest
+make podman-push
 ```

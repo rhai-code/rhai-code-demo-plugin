@@ -7,15 +7,7 @@
       "component": { "$codeRef": "RhaiCodeDemoPage" }
     }
   },
-  {
-    "type": "console.navigation/section",
-    "properties": {
-      "id": "rhai",
-      "name": "RHAI",
-      "perspective": "admin"
-    }
-  },
-  {
+{
     "type": "console.navigation/href",
     "properties": {
       "id": "rhai-code-demo",
